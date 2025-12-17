@@ -4,12 +4,17 @@ import { router } from './routes/event.routes.js'
 import cron from 'node-cron'
 import cors from 'cors'
 import path from 'path'
+import dotenv from 'dotenv'
+
+dotenv.config()
 
 const app = express()
 
 app.use(cors({
     origin: '*'
 }))
+
+const port = process.env.PORT || 5000
 
 app.use(express.json())
 app.use(router)
@@ -40,6 +45,6 @@ app.get('/api/datas/:ano', (req, res) => {
     res.json(datasFormatadas)
 })
 
-app.listen('https://brubru.onrender.com', () => {
-    console.log('Servidor rodando na porta 5000')
+app.listen(port, () => {
+    console.log(`Servidor rodando na porta ${port}`)
 })
