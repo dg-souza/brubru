@@ -14,7 +14,9 @@ app.use(cors({
     origin: '*'
 }))
 
-const port = process.env.PORT || 5000
+// `envPortOrUrl` pode conter um número (porta) ou uma URL completa (deploy).
+const envPortOrUrl = process.env.PORT || 5000
+const listenPort = parseInt(process.env.LISTEN_PORT || process.env.PORT, 10) || 5000
 
 app.use(express.json())
 app.use(router)
@@ -45,6 +47,37 @@ app.get('/api/datas/:ano', (req, res) => {
     res.json(datasFormatadas)
 })
 
-app.listen(port, () => {
-    console.log(`Servidor rodando na porta ${port}`)
+app.listen(envPortOrUrl, () => {
+    console.log(`Servidor rodando na porta ${listenPort}`)
 })
+
+// Rota simples para health/check/keepalive
+app.get('/keepalive', (req, res) => {
+    return res.sendStatus(200)
+})
+
+// Keep-alive interno para impedir que plataformas que hibernam apliquem sleep
+// Configurável: set KEEP_ALIVE=false para desabilitar, KEEP_ALIVE_INTERVAL_MS para intervalo
+const KEEP_ALIVE = process.env.KEEP_ALIVE !== 'false'
+const KEEP_ALIVE_INTERVAL_MS = parseInt(process.env.KEEP_ALIVE_INTERVAL_MS) || 60 * 1000
+if (KEEP_ALIVE) {
+    // Determinar base URL para o ping:
+    let baseUrl
+    const portOrUrl = envPortOrUrl || listenPort
+    if (process.env.KEEP_ALIVE_URL) baseUrl = process.env.KEEP_ALIVE_URL.replace(/\/$/, '')
+    else if (/^https?:\/\//.test(String(portOrUrl))) baseUrl = String(portOrUrl).replace(/\/$/, '')
+    else baseUrl = `http://localhost:${listenPort}`
+
+    const url = `${baseUrl}/keepalive`
+    // ping imediato
+    fetch(url).catch(e => console.warn('keepalive initial ping failed', e.message))
+
+    setInterval(async () => {
+        try {
+            const res = await fetch(url)
+            if (!res.ok) console.warn('keepalive ping non-ok', res.status)
+        } catch (e) {
+            console.warn('keepalive ping error', e.message)
+        }
+    }, KEEP_ALIVE_INTERVAL_MS)
+}
