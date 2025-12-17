@@ -8,7 +8,7 @@ import path from 'path'
 const app = express()
 
 app.use(cors({
-    origin: 'http://localhost:3000'
+    origin: 'https://brubrus2.netlify.app'
 }))
 
 app.use(express.json())
@@ -40,6 +40,6 @@ app.get('/api/datas/:ano', (req, res) => {
     res.json(datasFormatadas)
 })
 
-app.listen(5000, () => {
+app.listen('https://brubru.onrender.com', () => {
     console.log('Servidor rodando na porta 5000')
 })
