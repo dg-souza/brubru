@@ -8,7 +8,7 @@ import path from 'path'
 const app = express()
 
 app.use(cors({
-    origin: 'https://brubrus2.netlify.app'
+    origin: '*'
 }))
 
 app.use(express.json())
